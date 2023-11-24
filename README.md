@@ -113,6 +113,37 @@ cloudshell-user$ source <(curl https://npkproject.io/cloudshell_install.sh)
 @c6fc/npk> npm run destroy
 ```
 
+# Docker
+Alternatively, you can use Docker to deploy NPK.
+
+## Build container
+```
+git clone https://github.com/c6fc/npk.git
+cd npk
+docker build -t npk .
+```
+
+### Deploying
+The following example deploys NPK. AWS keys are added via environment variables.
+```
+docker run -v [/path/to/persistent/npk-settings.json]:/home/node/npk/npk-settings.json -e AWS_ACCESS_KEY_ID=[AWS_ACCESS_KEY_ID] -e AWS_SECRET_ACCESS_KEY=[AWS_SECRET_ACCESS_KEY] -e AWS_DEFAULT_REGION=[AWS_DEFAULT_REGION] -e AWS_SESSION_TOKEN=[AWS_SESSION_TOKEN] -it npk deploy
+```
+
+### Destroying
+```
+docker run -v [/path/to/persistent/npk-settings.json]:/home/node/npk/npk-settings.json -e AWS_ACCESS_KEY_ID=[AWS_ACCESS_KEY_ID] -e AWS_SECRET_ACCESS_KEY=[AWS_SECRET_ACCESS_KEY] -e AWS_DEFAULT_REGION=[AWS_DEFAULT_REGION] -e AWS_SESSION_TOKEN=[AWS_SESSION_TOKEN] -it npk destroy
+```
+
+### Alternative: Mounting AWS credential file
+```
+docker run -v [/path/to/persistent/npk-settings.json]:/home/node/npk/npk-settings.json -v [/path/to/your/home]/.aws:/home/node/.aws -it npk deploy
+```
+
+### Destroying
+```
+docker run -v [/path/to/persistent/npk-settings.json]:/home/node/npk/npk-settings.json -v [/path/to/your/home]/.aws:/home/node/.aws -it npk destroy
+```
+
 # Official Discord Channel
 
 Have questions, need help, want to contribute or brag about a win? Come hang out on Discord!
