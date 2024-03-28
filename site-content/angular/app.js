@@ -11,6 +11,11 @@ angular
     			.filter(e => mask.includes(e[field]));
     	}
     })
+		.filter('keys', function() {
+			return function(obj) {
+				return Object.keys(obj)
+			}
+		})
     .filter('equals', function() {
     	return function(items, equals) {
     		if (typeof items != "object") {
