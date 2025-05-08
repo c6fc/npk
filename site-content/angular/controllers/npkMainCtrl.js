@@ -2622,7 +2622,7 @@ angular
     $scope.quotas = QUOTAS;
     $scope.families = FAMILIES;
     $scope.familyregions = FAMILYREGIONS;
-    $scope.all_regions = Object.keys(REGIONS);
+    $scope.all_regions = REGIONS;
 
     $scope.onReady = function() {
       $scope.$parent.startApp();

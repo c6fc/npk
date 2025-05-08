@@ -224,26 +224,36 @@ async function getAZsWithQuota() {
 	
 	console.log("[+] Retrieved quotas.");
 
-	const instanceRegions = {};
-	const instanceTypes = Object.keys(families).reduce((instances, family) => {
-		const firstInstance = Object.keys(families[family].instances)[0];
-		instances[firstInstance] = family;
-		instanceRegions[family] = [];
-
+	// Map instance types to GPU
+	const instanceTypesToGpu = Object.keys(families).reduce((instances, gpu) => {
+		Object.keys(families[gpu].instances).forEach(instanceType => {
+			instances[instanceType] = gpu
+		});
 		return instances;
-	}, {});
+	}, {})
 
+	const instanceAvailabilityInRegions = {};
 	const offeringsPromises = regions.reduce((offerings, region) => {
 		const ec2 = new aws.EC2({ region });
 
 		offerings.push(ec2.describeInstanceTypeOfferings({
-			LocationType: "region"
+			LocationType: "availability-zone",
+			Filters: [
+				{
+					Name: "instance-type",
+					Values: Object.keys(instanceTypesToGpu)
+				}
+			]
 		}).promise().then((data) => {
+			data.InstanceTypeOfferings
+				.map(offering => {
+					const gpu = instanceTypesToGpu[offering.InstanceType];
 
-			const instances = data.InstanceTypeOfferings
-				.filter(e => Object.keys(instanceTypes).includes(e.InstanceType))
-				.map(e => {
-					instanceRegions[instanceTypes[e.InstanceType]].push(region);
+					// Build up path
+					instanceAvailabilityInRegions[gpu] ??= {};
+					instanceAvailabilityInRegions[gpu][region] ??= {};
+					instanceAvailabilityInRegions[gpu][region][offering.InstanceType] ??= [];
+					instanceAvailabilityInRegions[gpu][region][offering.InstanceType].push(offering.Location);
 				});
 		}).catch(e => {
 			console.log(`[-] Unable to get instance support for ${region}, but this isn't fatal.`);
@@ -255,7 +265,7 @@ async function getAZsWithQuota() {
 
 	await Promise.all(offeringsPromises);
 
-	result.familyRegions = instanceRegions;
+	result.familyRegions = instanceAvailabilityInRegions;
 
 	console.log("[+] Retrieved per-region instance support.");
 
