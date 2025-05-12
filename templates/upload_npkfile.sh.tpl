@@ -34,7 +34,7 @@ echo "Processing $1 $FILENAME"
 ARCHIVE=$(echo $${FILENAME%.*}).7z
 echo "- Counting lines"
 FILELINES=$(wc -l $2 | cut -d" " -f1)
-SIZE=$(ls -al $2 | cut -d" " -f5)
+SIZE=$(ls -ao $2 | cut -d" " -f4)
 echo "- Compressing"
 7z a $ARCHIVE $2
 
