@@ -1,7 +1,15 @@
-#! /bin/bash -xe
+#! /bin/bash -x
 
-amazon-linux-extras install -y epel
-yum install -y wget p7zip
+shutdown_on_exit() {
+	echo "[!] Script exited. Shutting down in two minutes."
+	shutdown +2
+}
+
+trap shutdown_on_exit EXIT
+set -e
+
+# amazon-linux-extras install -y epel
+yum install -y wget p7zip pv
 
 mkfs.ext4 /dev/nvme1n1
 
@@ -19,7 +27,8 @@ else
 	mkdir /npk/{raw,compressed}
 fi
 
-export AWS_DEFAULT_REGION=`wget -qO- http://169.254.169.254/latest/meta-data/placement/availability-zone | sed 's/.$//'`
+export TOKEN=`curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"`
+export AWS_DEFAULT_REGION=`wget "--header=X-aws-ec2-metadata-token: $TOKEN" -qO- http://169.254.169.254/latest/meta-data/placement/availability-zone | sed 's/.$//'`
 export AWS_DEFAULT_OUTPUT=json
 
 export TARGETFILE={{targetfile}}
@@ -41,11 +50,12 @@ if [[ `echo $FILETYPE | grep text | wc -l` -eq 0 ]]; then
 	mv /npk/raw/rawfile /npk/raw/cprfile
 	FIRSTFILE=`7za l /npk/raw/cprfile | tail -n 3 | head -n 1 | awk ' { print($6) } '`
 	FILENAME=${FIRSTFILE##*/}
-	7za x /npk/raw/cprfile -o/npk/raw/output/
+	7za x -bsp1 /npk/raw/cprfile -o/npk/raw/output/
 	# rm -f /npk/raw/cprfile
 	mv /npk/raw/output/$FILENAME /npk/raw/rawfile
 fi
 
+echo [+] Counting lines in file...
 FILELINES=$(wc -l /npk/raw/rawfile | cut -d" " -f1)
 SIZE=$(ls -al /npk/raw/rawfile | cut -d" " -f5)
 
@@ -53,7 +63,7 @@ SIZE=$(ls -al /npk/raw/rawfile | cut -d" " -f5)
 # 7za a /npk/compressed/$FILENAME.7z /npk/raw/rawfile
 
 echo "Compressing with gzip"
-gzip -c /npk/raw/rawfile > /npk/compressed/$FILENAME.gz
+pv -nte /npk/raw/rawfile | gzip -c  > /npk/compressed/$FILENAME.gz
 
 echo "$FILENAME has $FILELINES lines and $SIZE bytes. Preparing to upload as $TARGETFILETYPE."
 
@@ -62,5 +72,3 @@ aws s3 cp /npk/compressed/$FILENAME.gz s3://{{dictionarybucket}}/$TARGETFILETYPE
 if [[ `echo $TARGETFILE | grep s3: | wc -l` -gt 0 ]]; then
 	aws s3 rm $TARGETFILE
 fi
-
-poweroff
