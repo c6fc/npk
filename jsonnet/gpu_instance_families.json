@@ -38,12 +38,20 @@
 			"g6.48xlarge": [8, 192]
 		}
 	},
+	"NVIDIA L40S": {
+  		"quotaCode": "L-3819A6DF",
+  		"instances": {
+    		"g6e.xlarge": [1,   4],
+    		"g6e.12xlarge": [4,  48],
+    		"g6e.48xlarge": [8, 192]
+  		}
+	},
 	"Radeon Pro V520": {
 		"ami": "amzn2-ami-amd-hvm-*-x86_64-*",
 		"owner": "679593333241",
 		"quotaCode": "L-3819A6DF",
 		"instances": {
-			"g4ad.xlarge": [1, 16],
+			"g4ad.xlarge": [1, 4],
 			"g4ad.8xlarge": [2, 32],
 			"g4ad.16xlarge": [4, 64]
 		}
