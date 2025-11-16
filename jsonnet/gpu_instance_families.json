@@ -41,8 +41,8 @@
 	"NVIDIA L40S": {
   		"quotaCode": "L-3819A6DF",
   		"instances": {
-    		"g6e.xlarge": [1,   4],
-    		"g6e.12xlarge": [4,  48],
+    		"g6e.xlarge": [1, 4],
+    		"g6e.12xlarge": [4, 48],
     		"g6e.48xlarge": [8, 192]
   		}
 	},
