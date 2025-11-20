@@ -1,7 +1,9 @@
 #! /bin/bash
 
-# curl https://npkproject.io/cloudshell_install_dev.sh | bash
+# curl https://npkproject.io/cloudshell_install.sh | bash
 
+TF_CLI_ARGS_apply="-parallelism=1"
+NODE_OPTIONS="--max-old-space-size=1536"
 NODE_VERSION=20.19.2
 
 if [[ $UID -eq 0 ]]; then
