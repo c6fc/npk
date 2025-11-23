@@ -120,26 +120,28 @@ exports.main = async function(event, context, callback) {
 
 		const images = await ec2.describeImages({
 			Filters: [{
-		        Name: "virtualization-type",
-		        Values: ["hvm"]
-		    }, {
-		    	Name: "root-device-type",
-		    	Values: ["ebs"]
-		    }, {
-		    	Name: "architecture",
-    			Values: ["x86_64"]
-		    }, {
-		    	Name: "owner-id",
-    			Values: ["137112412989"]
-		    }, {
-		    	Name: "name",
-		    	Values: ["Amazon Linux 2023 kernel-6.* AMI"]
-		    }]
+				Name: "virtualization-type",
+				Values: ["hvm"]
+			}, {
+				Name: "root-device-type",
+				Values: ["ebs"]
+			}, {
+				Name: "architecture",
+				Values: ["x86_64"]
+			}, {
+				Name: "owner-id",
+				Values: ["137112412989"]
+			}, {
+				Name: "name",
+				Values: ["al2023-ami-2023.*"]
+			}]
 		}).promise()
 
 		const image = images.Images.reduce((newest, entry) => 
 			entry.CreationDate > newest.CreationDate ? entry : newest
 		, { CreationDate: '1980-01-01T00:00:00.000Z' });
+
+		console.log(images);
 
 		if (!!!image.ImageId) {
 			console.log("Unable to find a suitable AMI.");

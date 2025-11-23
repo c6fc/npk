@@ -333,7 +333,9 @@ local regionKeys = std.objectFields(settings.regions);
 		resource: iam.iam_role(
 			"npk_ec2_compress",
 			"NPK Compression Nodes",
-			{},
+			{
+				"AmazonSSMManagedInstanceCore": "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+			},
 	        {
 	        	EC2Compression: [{
 					Sid: "s3ToProcess",
