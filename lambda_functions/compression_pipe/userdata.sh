@@ -11,20 +11,49 @@ set -e
 # amazon-linux-extras install -y epel
 yum install -y wget p7zip pv
 
-mkfs.ext4 /dev/nvme1n1
+# Discover the root device and exclude it from data disks
+echo "[*] Disk layout:"
+lsblk -o NAME,TYPE,SIZE,MOUNTPOINT
 
-if [[ -e /dev/nvme2n1 ]]; then
-	mkfs.ext4 /dev/nvme2n1
-	mkdir -p /npk/raw
-	mkdir /npk/compressed
+ROOT_PART=$(findmnt -no SOURCE /)
+ROOT_DISK=$(lsblk -no PKNAME "$ROOT_PART" 2>/dev/null || true)
 
-	mount /dev/nvme1n1 /npk/raw	
-	mount /dev/nvme2n1 /npk/compressed
+if [[ -z "$ROOT_DISK" ]]; then
+  echo "[!] Could not determine root disk; aborting to avoid formatting the wrong device."
+  lsblk -o NAME,TYPE,MOUNTPOINT
+  exit 1
+fi
+
+# Find NVMe "disk" devices that are NOT the root disk
+mapfile -t DATA_DISKS < <(
+  lsblk -ndo NAME,TYPE | awk -v root="$ROOT_DISK" '
+    $2=="disk" && $1 ~ /^nvme/ && $1 != root { print "/dev/"$1 }
+  '
+)
+
+if [[ ${#DATA_DISKS[@]} -eq 0 ]]; then
+  echo "[!] No non-root NVMe data disks found; cannot continue."
+  exit 1
+fi
+
+RAW_DEV="${DATA_DISKS[0]}"
+COMP_DEV="${DATA_DISKS[1]:-}"
+
+echo "[*] Using $RAW_DEV for raw data"
+[[ -n "$COMP_DEV" ]] && echo "[*] Using $COMP_DEV for compressed data"
+
+mkfs.ext4 "$RAW_DEV"
+
+if [[ -n "$COMP_DEV" ]]; then
+  mkfs.ext4 "$COMP_DEV"
+
+  mkdir -p /npk/raw /npk/compressed
+  mount "$RAW_DEV" /npk/raw
+  mount "$COMP_DEV" /npk/compressed
 else
-	mkdir /npk
-	mount /dev/nvme1n1 /npk
-
-	mkdir /npk/{raw,compressed}
+  mkdir -p /npk
+  mount "$RAW_DEV" /npk
+  mkdir -p /npk/raw /npk/compressed
 fi
 
 export TOKEN=`curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"`
