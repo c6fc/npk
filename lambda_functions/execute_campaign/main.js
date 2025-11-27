@@ -232,7 +232,12 @@ exports.main = async function(event, context, callback) {
     	Values: [amis[manifest.instanceType] || defaultImageName]
     });
 
-    const defaultImageOwner = "898082745236";
+    const defaultImageOwnerMap = {
+    "af-south-1": "380973545650",
+    // add more overrides as needed
+	};
+	
+	const defaultImageOwner = defaultImageOwnerMap[manifest.region] || "898082745236";
 
 	imageFilters.push({
     	Name: "owner-id",
