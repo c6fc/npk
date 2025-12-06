@@ -233,8 +233,18 @@ exports.main = async function(event, context, callback) {
     });
 
     const defaultImageOwnerMap = {
-    "af-south-1": "380973545650",
     // add more overrides as needed
+	"ap-south-2": "442309848619",
+	"eu-south-1": "771282176748",
+	"eu-south-2": "565266784259",
+	"me-central-1": "077386991849",
+	"eu-central-2": "350317392379",
+	"af-south-1": "380973545650",
+	"me-south-1": "130039589902",
+	"ap-east-1": "452469860969",
+	"ap-southeast-3": "534350146288",
+	"ap-southeast-4": "064406389444",
+	"ap-southeast-5": "803833843295",
 	};
 	
 	const defaultImageOwner = defaultImageOwnerMap[manifest.region] || "898082745236";
